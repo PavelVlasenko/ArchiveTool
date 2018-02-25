@@ -11,7 +11,7 @@ public class CompressorTest {
 
         Settings.inputZipDir = "/home/pavel/test/zip/input";
         Settings.outputZipDir = "/home/pavel/test/zip/output";
-        Settings.maxSize = 600;
+        Settings.maxSize = 60;
 
         Compressor compressor = new Compressor();
         compressor.compress();
