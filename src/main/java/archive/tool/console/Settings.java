@@ -8,6 +8,6 @@ public class Settings {
     public static String inputUnzipDir;
     public static String outputUnzipDir;
 
-    public static int maxSize;
+    public static long maxSize;
 
 }

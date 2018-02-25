@@ -5,10 +5,13 @@ import archive.tool.console.Settings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Decompressor {
+
+    private List<String, InputStream>
 
     public void decompress() throws Exception {
         System.out.println("Start decompress archives.");
@@ -21,12 +24,8 @@ public class Decompressor {
 
     private void decompressArchive(File file) throws Exception {
         ZipInputStream zis = new ZipInputStream(new FileInputStream(file));
-
-
         ZipEntry ze = zis.getNextEntry();
-
         while(ze!=null){
-
             String fileName = ze.getName();
             File newFile = new File(Settings.outputUnzipDir + File.separator + fileName);
 

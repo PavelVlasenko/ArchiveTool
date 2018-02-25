@@ -50,21 +50,57 @@ public class Compressor {
         zipOut.closeEntry();
         fis.close();
         if (isSizeExceeded()) {
-            zipOut.close();
-            removeEntry(zipPath, fileName);
-            zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
-            FileOutputStream fos = new FileOutputStream(zipPath);
-            zipOut = new ZipOutputStream(fos);
-            archiveCounter ++;
-            zipFile(fileToZip, fileName);
+            if(isFileLargerMaxLimit()) {
+                System.out.println("Compressed file is larger then max limit.");
+                nextArchive();
+                int parts = (int)(zipEntry.getCompressedSize()/Settings.maxSize + 1);
+                System.out.println("Split file into " + parts + " parts");
+                long partSize = zipEntry.getSize() * zipEntry.getCompressedSize() / Settings.maxSize;
+                System.out.println("Part size = " + partSize);
+                compressLargeFile(fileToZip, fileName, parts, partSize);
+            }
+            else {
+                System.out.println("Max limit exceeded. Create new archive.");
+                zipOut.close();
+                removeEntry(zipPath, fileName);
+                nextArchive();
+                zipFile(fileToZip, fileName);
+            }
         }
     }
 
+    private void compressLargeFile(File fileToZip, String fileName, int parts, long partSize) throws Exception {
+        FileInputStream fis = new FileInputStream(fileToZip);
+        long partLimit = partSize;
+        for(int i = 0; i < parts; i++) {
+            zipEntry = new ZipEntry(fileName + "_part" + i);
+            zipOut.putNextEntry(zipEntry);
+            int currentByte;
+            while ((currentByte = fis.read()) >= partLimit) {
+                zipOut.write(currentByte);
+            }
+            partLimit+=partSize;
+            zipOut.close();
+            nextArchive();
+        }
+    }
+
+    private void nextArchive() throws Exception {
+        zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
+        FileOutputStream fos = new FileOutputStream(zipPath);
+        zipOut = new ZipOutputStream(fos);
+        archiveCounter++;
+    }
+
     private boolean isSizeExceeded() throws Exception {
-        long s = zipEntry.getCompressedSize();
         File zip = new File(zipPath);
-        long h = zip.length();
-        return h > Settings.maxSize;
+        long zipSize = zip.length();
+        return zipSize > Settings.maxSize;
+    }
+
+    private boolean isFileLargerMaxLimit() {
+        long entrySize = zipEntry.getCompressedSize();
+        return entrySize > Settings.maxSize;
     }
 
     private void removeEntry(String zipPath, String entryPath) throws Exception {
