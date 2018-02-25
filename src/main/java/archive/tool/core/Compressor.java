@@ -1,6 +1,6 @@
 package archive.tool.core;
 
-import archive.tool.Settings;
+import archive.tool.console.Settings;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,11 +22,11 @@ public class Compressor {
     private int archiveCounter = 1;
 
     public void compress() throws Exception {
-        zipPath = Settings.outputDir + File.separator + "dirCompressed.zip";
+        zipPath = Settings.outputZipDir + File.separator + "dirCompressed.zip";
         FileOutputStream fos = new FileOutputStream(zipPath);
         zipOut = new ZipOutputStream(fos);
 
-        File fileToZip = new File(Settings.inputDir);
+        File fileToZip = new File(Settings.inputZipDir);
         zipFile(fileToZip, fileToZip.getName());
         zipOut.close();
         fos.close();
@@ -52,7 +52,7 @@ public class Compressor {
         if (isSizeExceeded()) {
             zipOut.close();
             removeEntry(zipPath, fileName);
-            zipPath = Settings.outputDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
+            zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
             FileOutputStream fos = new FileOutputStream(zipPath);
             zipOut = new ZipOutputStream(fos);
             archiveCounter ++;
@@ -77,25 +77,4 @@ public class Compressor {
             Files.delete(zipfs.getPath(entryPath)); // File inside zip to delete
         }
     }
-
-
-
-//    if(sizeCounter > Settings.maxSize) {
-//        System.out.println("Max limit is reached");
-//        sizeCounter = 0;
-//        archiveCounter++;
-//        zipOut.close();
-//
-//        zipPath = Settings.outputDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
-//        FileOutputStream fos = new FileOutputStream(zipPath);
-//        zipOut = new ZipOutputStream(fos);
-//        if(fileName.equals(this.fileName)) {
-//            fileCounter++;
-//        } else {
-//            fileCounter = 1;
-//        }
-//        ZipEntry newZipEntry = new ZipEntry(fileName + fileCounter);
-//        zipOut.putNextEntry(newZipEntry);
-//    }
-
 }

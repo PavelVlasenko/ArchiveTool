@@ -1,11 +1,12 @@
-package archive.tool;
+package archive.tool.core;
 
 import archive.tool.console.Settings;
-import archive.tool.core.Compressor;
+import org.junit.Test;
 
-public class Main {
+public class CompressorTest {
 
-    public static void main(String ... args) throws Exception {
+    @Test
+    public void shouldDecompress() throws Exception {
         System.out.println("Start program");
 
         Settings.inputZipDir = "/home/pavel/test/zip/input";
@@ -14,6 +15,5 @@ public class Main {
 
         Compressor compressor = new Compressor();
         compressor.compress();
-
     }
 }
