@@ -9,7 +9,7 @@ public class Main {
 
         Settings.inputDir = "/home/pavel/test/zip/input";
         Settings.outputDir = "/home/pavel/test/zip/output";
-        Settings.maxSize = 50000;
+        Settings.maxSize = 600;
 
         Compressor compressor = new Compressor();
         compressor.compress();
