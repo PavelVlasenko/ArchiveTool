@@ -2,6 +2,7 @@ package archive.tool.core.impl;
 
 import archive.tool.console.Settings;
 import archive.tool.core.Compressor;
+import archive.tool.core.FileUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +26,7 @@ public class ZipCompressor implements Compressor {
     public void compress()  throws IOException {
         nextArchive();
         File fileToZip = new File(Settings.inputZipDir);
-        zipFile(fileToZip, fileToZip.getName());
+        compressFile(fileToZip, fileToZip.getName());
         close();
     }
 
@@ -36,12 +37,18 @@ public class ZipCompressor implements Compressor {
         }
     }
 
-    private void zipFile(File fileToZip, String fileName) throws IOException {
+    /**
+     * Compress single file.
+     * @param fileToZip target file.
+     * @param fileName file name.
+     * IOException when file not found or error while read/write to file.
+     */
+    private void compressFile(File fileToZip, String fileName) throws IOException {
         System.out.println("Start Zip file " + fileName);
         if (fileToZip.isDirectory()) {
             File[] children = fileToZip.listFiles();
             for (File childFile : children) {
-                zipFile(childFile, fileName + "/" + childFile.getName());
+                compressFile(childFile, fileName + "/" + childFile.getName());
             }
             return;
         }
@@ -51,10 +58,9 @@ public class ZipCompressor implements Compressor {
         FileInputStream fis = new FileInputStream(fileToZip);
         zipEntry = new ZipEntry(fileName);
         zipOut.putNextEntry(zipEntry);
-        int currentByte;
-        while ((currentByte = fis.read()) >= 0) {
-            zipOut.write(currentByte);
-        }
+
+        FileUtil.write(fis, zipOut);
+
         zipOut.closeEntry();
         fis.close();
         fileCounter++;
@@ -76,7 +82,7 @@ public class ZipCompressor implements Compressor {
             else {
                 System.out.println("Max limit exceeded. Create new archive.");
                 nextArchive();
-                zipFile(fileToZip, fileName);
+                compressFile(fileToZip, fileName);
             }
         }
     }
@@ -164,15 +170,11 @@ public class ZipCompressor implements Compressor {
         ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFile));
         ZipEntry entry = zin.getNextEntry();
 
-        byte[] buf = new byte[1024];
         while (entry != null) {
             String name = entry.getName();
             if (!entryName.equals(name)) {
                 zipOut.putNextEntry(new ZipEntry(name));
-                int len;
-                while ((len = zin.read(buf)) > 0) {
-                    zipOut.write(buf, 0, len);
-                }
+                FileUtil.write(zin, zipOut);
             } else {
                 System.out.println("Skip entry " + name);
             }

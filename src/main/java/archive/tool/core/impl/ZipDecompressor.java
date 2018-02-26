@@ -2,6 +2,7 @@ package archive.tool.core.impl;
 
 import archive.tool.console.Settings;
 import archive.tool.core.Decompressor;
+import archive.tool.core.FileUtil;
 
 import java.io.*;
 import java.util.*;
@@ -31,6 +32,11 @@ public class ZipDecompressor implements Decompressor {
         decompressLargeFiles();
     }
 
+    /**
+     * Decompress single archive.
+     * @param file target archive.
+     * @throws IOException when file not found or error while read/write to file.
+     */
     private void decompressArchive(File file) throws IOException {
         ZipInputStream zis = new ZipInputStream(new FileInputStream(file));
         ZipEntry ze = zis.getNextEntry();
@@ -49,19 +55,12 @@ public class ZipDecompressor implements Decompressor {
 
             FileOutputStream fos = new FileOutputStream(newFile);
 
-            int len;
-            byte[] buffer = new byte[1024];
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
-            }
-
+            FileUtil.write(zis, fos);
             fos.close();
             ze = zis.getNextEntry();
         }
-
         zis.closeEntry();
         zis.close();
-
         System.out.println("Done");
     }
 
@@ -76,7 +75,7 @@ public class ZipDecompressor implements Decompressor {
             FileOutputStream fos;
             if(!largeFilesOut.keySet().contains(shortFileName)) {
                 boolean mkdir = new File(shortFileName).getParentFile().mkdirs();
-                if(mkdir == false) {
+                if(!mkdir) {
                     throw new RuntimeException("Cannot create directory for " + shortFileName);
                 }
                 fos = new FileOutputStream(shortFileName);
@@ -88,11 +87,7 @@ public class ZipDecompressor implements Decompressor {
             ZipFile zipFile = new ZipFile(entry.getValue());
             ZipEntry zipEntry = zipFile.getEntry(fileName);
             InputStream zis = zipFile.getInputStream(zipEntry);
-            int len;
-            byte[] buffer = new byte[1024];
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
-            }
+            FileUtil.write(zis, fos);
         }
     }
 }
