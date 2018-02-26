@@ -34,6 +34,7 @@ public class Decompressor {
             if(fileName.contains("_part")) {
                 System.out.println("Large file input for file " + fileName);
                 largeFilesIn.put(fileName, file);
+                ze = zis.getNextEntry();
                 continue;
             }
 
@@ -69,15 +70,19 @@ public class Decompressor {
             String fileName = entry.getKey();
             String shortFileName = Settings.outputUnzipDir + File.separator +
                     fileName.substring(0, fileName.indexOf("_part"));
-            FileOutputStream fos = null;
+            FileOutputStream fos;
             if(!largeFilesOut.keySet().contains(shortFileName)) {
+                boolean mkdir = new File(shortFileName).getParentFile().mkdirs();
+                if(mkdir == false) {
+                    throw new RuntimeException("Cannot create directory for " + shortFileName);
+                }
                 fos = new FileOutputStream(shortFileName);
                 largeFilesOut.put(shortFileName, fos);
             } else {
                 fos = largeFilesOut.get(shortFileName);
             }
 
-            ZipFile zipFile = new ZipFile(entry.getKey());
+            ZipFile zipFile = new ZipFile(entry.getValue());
             ZipEntry zipEntry = zipFile.getEntry(fileName);
             InputStream zis = zipFile.getInputStream(zipEntry);
             int len;

@@ -9,8 +9,8 @@ public class DecompressorTest {
     public void shouldDecompress() throws Exception {
         System.out.println("Start program");
 
-        Settings.inputUnzipDir = "/home/pavel/test/zip/output";
-        Settings.outputUnzipDir = "/home/pavel/test/zip/outputUnzip";
+        Settings.inputUnzipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
+        Settings.outputUnzipDir = "C:\\Users\\SBT-Vlasenko-PV\\Test\\zip\\unzipOut";
 
         Decompressor decompressor = new Decompressor();
         decompressor.decompress();
