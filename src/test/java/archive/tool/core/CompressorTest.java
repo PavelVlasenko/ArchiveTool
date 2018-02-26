@@ -9,9 +9,9 @@ public class CompressorTest {
     public void shouldDecompress() throws Exception {
         System.out.println("Start program");
 
-        Settings.inputZipDir = "/home/pavel/test/zip/input";
-        Settings.outputZipDir = "/home/pavel/test/zip/output";
-        Settings.maxSize = 60;
+        Settings.inputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/in";
+        Settings.outputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
+        Settings.maxSize = 1000;
 
         Compressor compressor = new Compressor();
         compressor.compress();

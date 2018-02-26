@@ -5,13 +5,8 @@ import archive.tool.console.Settings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Compressor {
@@ -19,26 +14,34 @@ public class Compressor {
     private ZipOutputStream zipOut;
     private String zipPath;
     private ZipEntry zipEntry;
-    private int archiveCounter = 1;
+    private int archiveCounter = 0;
+    private int fileCounter = 0;
 
     public void compress() throws Exception {
-        zipPath = Settings.outputZipDir + File.separator + "dirCompressed.zip";
-        FileOutputStream fos = new FileOutputStream(zipPath);
-        zipOut = new ZipOutputStream(fos);
-
+        nextArchive();
         File fileToZip = new File(Settings.inputZipDir);
         zipFile(fileToZip, fileToZip.getName());
-        zipOut.close();
-        fos.close();
+        close();
+    }
+
+    private void close() throws Exception {
+        if(zipOut != null) {
+            zipOut.close();
+            zipOut = null;
+        }
     }
 
     public void zipFile(File fileToZip, String fileName) throws Exception {
+        System.out.println("Start Zip file " + fileName);
         if (fileToZip.isDirectory()) {
             File[] children = fileToZip.listFiles();
             for (File childFile : children) {
                 zipFile(childFile, fileName + "/" + childFile.getName());
             }
             return;
+        }
+        if(zipOut == null) {
+            nextArchive();
         }
         FileInputStream fis = new FileInputStream(fileToZip);
         zipEntry = new ZipEntry(fileName);
@@ -49,20 +52,26 @@ public class Compressor {
         }
         zipOut.closeEntry();
         fis.close();
+        fileCounter++;
+        System.out.println("Finish Zip file " + fileName);
         if (isSizeExceeded()) {
+            removeEntry(zipPath, fileName);
+
+
             if(isFileLargerMaxLimit()) {
-                System.out.println("Compressed file is larger then max limit.");
-                nextArchive();
+                System.out.println("Compressed file " + fileName + " is larger then max limit.");
+                if(fileCounter != 0) {
+                    System.out.println("Current archive contains files, create new one");
+                    nextArchive();
+                }
                 int parts = (int)(zipEntry.getCompressedSize()/Settings.maxSize + 1);
                 System.out.println("Split file into " + parts + " parts");
-                long partSize = zipEntry.getSize() * zipEntry.getCompressedSize() / Settings.maxSize;
+                long partSize = (long) Math.ceil((double)zipEntry.getSize() / parts);
                 System.out.println("Part size = " + partSize);
                 compressLargeFile(fileToZip, fileName, parts, partSize);
             }
             else {
                 System.out.println("Max limit exceeded. Create new archive.");
-                zipOut.close();
-                removeEntry(zipPath, fileName);
                 nextArchive();
                 zipFile(fileToZip, fileName);
             }
@@ -70,32 +79,43 @@ public class Compressor {
     }
 
     private void compressLargeFile(File fileToZip, String fileName, int parts, long partSize) throws Exception {
+        if(zipOut == null) {
+            nextArchive();
+        }
         FileInputStream fis = new FileInputStream(fileToZip);
         long partLimit = partSize;
+        long counter = 0;
         for(int i = 0; i < parts; i++) {
             zipEntry = new ZipEntry(fileName + "_part" + i);
             zipOut.putNextEntry(zipEntry);
-            int currentByte;
-            while ((currentByte = fis.read()) >= partLimit) {
-                zipOut.write(currentByte);
+            int cur = 0;
+            while ((counter <= partLimit) && (cur = fis.read()) >= 0) {
+                zipOut.write(cur);
+                counter++;
             }
-            partLimit+=partSize;
-            zipOut.close();
-            nextArchive();
+            partLimit += partSize;
+            if(i!= (parts -1)) nextArchive();
         }
+        zipOut.close();
+        zipOut = null;
     }
 
     private void nextArchive() throws Exception {
+        if (zipOut != null) {
+            zipOut.close();
+        }
         zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
-        FileOutputStream fos = new FileOutputStream(zipPath);
-        zipOut = new ZipOutputStream(fos);
+        zipOut = new ZipOutputStream(new FileOutputStream(zipPath));
         archiveCounter++;
+        fileCounter = 0;
     }
 
     private boolean isSizeExceeded() throws Exception {
         File zip = new File(zipPath);
         long zipSize = zip.length();
-        return zipSize > Settings.maxSize;
+        boolean result =  zipSize > Settings.maxSize;
+        System.out.println(zipPath + " size =  " + zipSize + ", limit exceeded = " + result);
+        return result;
     }
 
     private boolean isFileLargerMaxLimit() {
@@ -103,14 +123,30 @@ public class Compressor {
         return entrySize > Settings.maxSize;
     }
 
-    private void removeEntry(String zipPath, String entryPath) throws Exception {
-        Map<String, String> env = new HashMap<>();
-        env.put("create", "false");
+    private void removeEntry(String zipPath, String entryName) throws Exception {
+        zipOut.close();
+        nextArchive();
+        System.out.println("Remove entry " + entryName + " from zip " + zipPath);
+        File zipFile = new File(zipPath);
 
-        URI uri = URI.create("jar:file:///" + zipPath); // Zip file path
+        ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFile));
+        ZipEntry entry = zin.getNextEntry();
 
-        try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
-            Files.delete(zipfs.getPath(entryPath)); // File inside zip to delete
+        byte[] buf = new byte[1024];
+        while (entry != null) {
+            String name = entry.getName();
+            if (!entryName.equals(name)) {
+                zipOut.putNextEntry(new ZipEntry(name));
+                int len;
+                while ((len = zin.read(buf)) > 0) {
+                    zipOut.write(buf, 0, len);
+                }
+            } else {
+                System.out.println("Skip entry " + name);
+            }
+            entry = zin.getNextEntry();
         }
+        zin.close();
+        zipFile.delete();
     }
 }
