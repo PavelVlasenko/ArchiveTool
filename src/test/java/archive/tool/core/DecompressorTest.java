@@ -8,12 +8,13 @@ public class DecompressorTest {
 
     @Test
     public void shouldDecompress() throws Exception {
-        System.out.println("Start program");
+        System.out.println("Start decompresstest");
 
         Settings.inputUnzipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
         Settings.outputUnzipDir = "C:\\Users\\SBT-Vlasenko-PV\\Test\\zip\\unzipOut";
 
         ZipDecompressor decompressor = new ZipDecompressor();
         decompressor.decompress();
+        System.out.println("Done");
     }
 }

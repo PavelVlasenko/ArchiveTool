@@ -24,7 +24,7 @@ public class ZipCompressor implements Compressor {
     private int fileCounter = 0;
 
     public void compress()  throws IOException {
-        nextArchive();
+        nextArchive(true);
         File fileToZip = new File(Settings.inputZipDir);
         compressFile(fileToZip, fileToZip.getName());
         close();
@@ -53,7 +53,7 @@ public class ZipCompressor implements Compressor {
             return;
         }
         if(zipOut == null) {
-            nextArchive();
+            nextArchive(true);
         }
         FileInputStream fis = new FileInputStream(fileToZip);
         zipEntry = new ZipEntry(fileName);
@@ -71,7 +71,7 @@ public class ZipCompressor implements Compressor {
                 System.out.println("Compressed file " + fileName + " is larger then max limit.");
                 if(fileCounter != 0) {
                     System.out.println("Current archive contains files, create new one");
-                    nextArchive();
+                    nextArchive(true);
                 }
                 int parts = (int)(zipEntry.getCompressedSize()/Settings.maxSize + 1);
                 System.out.println("Split file into " + parts + " parts");
@@ -81,7 +81,7 @@ public class ZipCompressor implements Compressor {
             }
             else {
                 System.out.println("Max limit exceeded. Create new archive.");
-                nextArchive();
+                nextArchive(true);
                 compressFile(fileToZip, fileName);
             }
         }
@@ -99,7 +99,7 @@ public class ZipCompressor implements Compressor {
      */
     private void compressLargeFile(File fileToZip, String fileName, int parts, long partSize) throws IOException {
         if(zipOut == null) {
-            nextArchive();
+            nextArchive(true);
         }
         FileInputStream fis = new FileInputStream(fileToZip);
         long partLimit = partSize;
@@ -113,7 +113,7 @@ public class ZipCompressor implements Compressor {
                 counter++;
             }
             partLimit += partSize;
-            if(i!= (parts -1)) nextArchive();
+            if(i!= (parts -1)) nextArchive(true);
         }
         close();
     }
@@ -121,16 +121,18 @@ public class ZipCompressor implements Compressor {
     /**
      * Closes current archive, and open new one.
      * Archive counter is added to archive name, so order is dirCompressed0, dirCompressed1, etc...
+     *
+     * @param resetFileCounter if true, resets file counter
      * @throws IOException if file not found.
      */
-    private void nextArchive() throws IOException {
+    private void nextArchive(boolean resetFileCounter) throws IOException {
         if (zipOut != null) {
             zipOut.close();
         }
         zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
         zipOut = new ZipOutputStream(new FileOutputStream(zipPath));
         archiveCounter++;
-        fileCounter = 0;
+        if (resetFileCounter) fileCounter = 0;
     }
 
     /**
@@ -163,7 +165,7 @@ public class ZipCompressor implements Compressor {
      */
     private void removeEntry(String zipPath, String entryName) throws IOException {
         zipOut.close();
-        nextArchive();
+        nextArchive(false);
         System.out.println("Remove entry " + entryName + " from zip " + zipPath);
         File zipFile = new File(zipPath);
 

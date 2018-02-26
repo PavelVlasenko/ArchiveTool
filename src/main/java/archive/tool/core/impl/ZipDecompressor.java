@@ -75,12 +75,15 @@ public class ZipDecompressor implements Decompressor {
         for(Map.Entry<String, File> entry : largeFiles.entrySet()) {
             String fileName = entry.getKey();
             String shortFileName = Settings.outputUnzipDir + File.separator +
-                    fileName.substring(0, fileName.indexOf("_part"));
+                    fileName.substring(0, fileName.indexOf("_part")).replace("/", "\\");
             FileOutputStream fos;
             if(!largeFilesOutputStreams.keySet().contains(shortFileName)) {
-                boolean mkdir = new File(shortFileName).getParentFile().mkdirs();
-                if(!mkdir) {
-                    throw new RuntimeException("Cannot create directory for " + shortFileName);
+                File dir = new File(shortFileName).getParentFile();
+                if(!dir.exists()) {
+                    boolean mkdir = dir.mkdirs();
+                    if(!mkdir) {
+                        throw new RuntimeException("Cannot create directory for " + shortFileName);
+                    }
                 }
                 fos = new FileOutputStream(shortFileName);
                 largeFilesOutputStreams.put(shortFileName, fos);

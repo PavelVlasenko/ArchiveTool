@@ -7,8 +7,8 @@ import org.junit.Test;
 public class CompressorTest {
 
     @Test
-    public void shouldDecompress() throws Exception {
-        System.out.println("Start program");
+    public void shouldCompress() throws Exception {
+        System.out.println("Start compress test");
 
         Settings.inputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/in";
         Settings.outputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
@@ -16,5 +16,6 @@ public class CompressorTest {
 
         ZipCompressor compressor = new ZipCompressor();
         compressor.compress();
+        System.out.println("Done");
     }
 }
