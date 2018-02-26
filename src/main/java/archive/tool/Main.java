@@ -1,7 +1,7 @@
 package archive.tool;
 
 import archive.tool.console.Settings;
-import archive.tool.core.Compressor;
+import archive.tool.core.impl.ZipCompressor;
 
 public class Main {
 
@@ -12,7 +12,7 @@ public class Main {
         Settings.outputZipDir = "/home/pavel/test/zip/output";
         Settings.maxSize = 600;
 
-        Compressor compressor = new Compressor();
+        ZipCompressor compressor = new ZipCompressor();
         compressor.compress();
 
     }

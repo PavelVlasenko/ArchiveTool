@@ -1,6 +1,7 @@
 package archive.tool.core;
 
 import archive.tool.console.Settings;
+import archive.tool.core.impl.ZipCompressor;
 import org.junit.Test;
 
 public class CompressorTest {
@@ -11,9 +12,9 @@ public class CompressorTest {
 
         Settings.inputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/in";
         Settings.outputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
-        Settings.maxSize = 1000;
+        Settings.maxSize = 2000;
 
-        Compressor compressor = new Compressor();
+        ZipCompressor compressor = new ZipCompressor();
         compressor.compress();
     }
 }
