@@ -75,7 +75,7 @@ public class ZipDecompressor implements Decompressor {
         for(Map.Entry<String, File> entry : largeFiles.entrySet()) {
             String fileName = entry.getKey();
             String shortFileName = Settings.outputUnzipDir + File.separator +
-                    fileName.substring(0, fileName.indexOf("_part")).replace("/", "\\");
+                    fileName.substring(0, fileName.indexOf("_part"));
             FileOutputStream fos;
             if(!largeFilesOutputStreams.keySet().contains(shortFileName)) {
                 File dir = new File(shortFileName).getParentFile();
