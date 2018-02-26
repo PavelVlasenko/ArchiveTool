@@ -15,8 +15,8 @@ import java.util.zip.ZipInputStream;
  */
 public class ZipDecompressor implements Decompressor {
 
-    private Map<String, File> largeFilesIn = new TreeMap<>();
-    private Map<String, FileOutputStream> largeFilesOut = new HashMap<>();
+    private Map<String, File> largeFiles = new TreeMap<>();
+    private Map<String, FileOutputStream> largeFilesOutputStreams = new HashMap<>();
 
     /**
      * Decompress files. If archives contains splitted large files, stores
@@ -44,7 +44,7 @@ public class ZipDecompressor implements Decompressor {
             String fileName = ze.getName();
             if(fileName.contains("_part")) {
                 System.out.println("Part of large file " + fileName + " found");
-                largeFilesIn.put(fileName, file);
+                largeFiles.put(fileName, file);
                 ze = zis.getNextEntry();
                 continue;
             }
@@ -64,24 +64,28 @@ public class ZipDecompressor implements Decompressor {
         System.out.println("Done");
     }
 
+    /**
+     * Decompress large files.
+     * @throws IOException when file not found or error while read/write to file.
+     */
     private void decompressLargeFiles() throws IOException {
-        if(largeFilesIn.isEmpty()) {
+        if(largeFiles.isEmpty()) {
             return;
         }
-        for(Map.Entry<String, File> entry : largeFilesIn.entrySet()) {
+        for(Map.Entry<String, File> entry : largeFiles.entrySet()) {
             String fileName = entry.getKey();
             String shortFileName = Settings.outputUnzipDir + File.separator +
                     fileName.substring(0, fileName.indexOf("_part"));
             FileOutputStream fos;
-            if(!largeFilesOut.keySet().contains(shortFileName)) {
+            if(!largeFilesOutputStreams.keySet().contains(shortFileName)) {
                 boolean mkdir = new File(shortFileName).getParentFile().mkdirs();
                 if(!mkdir) {
                     throw new RuntimeException("Cannot create directory for " + shortFileName);
                 }
                 fos = new FileOutputStream(shortFileName);
-                largeFilesOut.put(shortFileName, fos);
+                largeFilesOutputStreams.put(shortFileName, fos);
             } else {
-                fos = largeFilesOut.get(shortFileName);
+                fos = largeFilesOutputStreams.get(shortFileName);
             }
 
             ZipFile zipFile = new ZipFile(entry.getValue());

@@ -12,7 +12,7 @@ public class CompressorTest {
 
         Settings.inputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/in";
         Settings.outputZipDir = "C:/Users/SBT-Vlasenko-PV/Test/zip/out";
-        Settings.maxSize = 2000;
+        Settings.maxSize = 7000;
 
         ZipCompressor compressor = new ZipCompressor();
         compressor.compress();
