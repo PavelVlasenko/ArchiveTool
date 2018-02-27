@@ -5,8 +5,8 @@ import archive.tool.console.Console;
 import archive.tool.console.Settings;
 import archive.tool.core.Compressor;
 import archive.tool.core.Decompressor;
-import archive.tool.core.impl.ZipCompressor;
-import archive.tool.core.impl.ZipDecompressor;
+import archive.tool.core.zip.ZipCompressor;
+import archive.tool.core.zip.ZipDecompressor;
 
 public class Main {
 

@@ -1,4 +1,4 @@
-package archive.tool.core.impl;
+package archive.tool.core.zip;
 
 import archive.tool.console.Settings;
 import archive.tool.core.Compressor;
@@ -23,6 +23,7 @@ public class ZipCompressor implements Compressor {
     private int archiveCounter = 0;
     private int fileCounter = 0;
 
+    @Override
     public void compress()  throws IOException {
         nextArchive(true);
         File fileToZip = new File(Settings.inputZipDir);
@@ -107,7 +108,7 @@ public class ZipCompressor implements Compressor {
         for(int i = 0; i < parts; i++) {
             zipEntry = new ZipEntry(fileName + "_part" + i);
             zipOut.putNextEntry(zipEntry);
-            int cur = 0;
+            int cur;
             while ((counter <= partLimit) && (cur = fis.read()) >= 0) {
                 zipOut.write(cur);
                 counter++;
@@ -132,7 +133,11 @@ public class ZipCompressor implements Compressor {
         zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
         zipOut = new ZipOutputStream(new FileOutputStream(zipPath));
         archiveCounter++;
-        if (resetFileCounter) fileCounter = 0;
+        if (resetFileCounter) {
+            fileCounter = 0;
+        } /*else {
+            fileCounter--;
+        }*/
     }
 
     /**

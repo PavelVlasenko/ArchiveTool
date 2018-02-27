@@ -1,4 +1,4 @@
-package archive.tool.core.impl;
+package archive.tool.core.zip;
 
 import archive.tool.console.Settings;
 import archive.tool.core.Decompressor;
@@ -15,7 +15,18 @@ import java.util.zip.ZipInputStream;
  */
 public class ZipDecompressor implements Decompressor {
 
-    private Map<String, File> largeFiles = new TreeMap<>();
+    private Map<String, File> largeFiles = new TreeMap<>((o1, o2) -> {
+        String nameFile1 = o1.substring(0, o1.indexOf("_part"));
+        String nameFile2 = o2.substring(0, o2.indexOf("_part"));
+        Integer partFile1 = Integer.valueOf(o1.substring(o1.indexOf("_part") + "_part".length()));
+        Integer partFile2 = Integer.valueOf(o2.substring(o2.indexOf("_part") + "_part".length()));
+
+        if (nameFile1.compareTo(nameFile2) == 0) {
+            return partFile1.compareTo(partFile2);
+        } else {
+            return nameFile1.compareTo(nameFile2);
+        }
+    });
     private Map<String, FileOutputStream> largeFilesOutputStreams = new HashMap<>();
 
     /**

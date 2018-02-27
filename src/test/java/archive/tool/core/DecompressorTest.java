@@ -1,7 +1,7 @@
 package archive.tool.core;
 
 import archive.tool.console.Settings;
-import archive.tool.core.impl.ZipDecompressor;
+import archive.tool.core.zip.ZipDecompressor;
 import org.junit.Test;
 
 public class DecompressorTest {
