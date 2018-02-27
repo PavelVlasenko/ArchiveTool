@@ -1,8 +1,8 @@
-package archive.tool.core.zip;
+package archive.tool.core.impl.zip;
 
 import archive.tool.console.Settings;
-import archive.tool.core.Compressor;
 import archive.tool.core.FileUtil;
+import archive.tool.core.impl.AbstractCompressor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,40 +12,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-/**
- * Compress files
- */
-public class ZipCompressor implements Compressor {
+public class ZipCompressor extends AbstractCompressor<ZipOutputStream> {
 
-    private long cellSize = 4000;
-    private ZipOutputStream zipOut;
-    private String zipPath;
     private ZipEntry zipEntry;
-    private int archiveCounter = 0;
-    private int fileCounter = 0;
 
     @Override
-    public void compress()  throws IOException {
-        nextArchive(true);
-        File fileToZip = new File(Settings.inputZipDir);
-        compressFile(fileToZip, fileToZip.getName());
-        close();
-    }
-
-    private void close() throws IOException{
-        if(zipOut != null) {
-            zipOut.close();
-            zipOut = null;
-        }
-    }
-
-    /**
-     * Compress single file.
-     * @param fileToZip target file.
-     * @param fileName file name.
-     * IOException when file not found or error while read/write to file.
-     */
-    private void compressFile(File fileToZip, String fileName) throws IOException {
+    protected void compressFile(File fileToZip, String fileName) throws IOException {
         System.out.println("Start Zip file " + fileName);
         if (fileToZip.isDirectory()) {
             File[] children = fileToZip.listFiles();
@@ -54,21 +26,21 @@ public class ZipCompressor implements Compressor {
             }
             return;
         }
-        if(zipOut == null) {
+        if(out == null) {
             nextArchive(true);
         }
         FileInputStream fis = new FileInputStream(fileToZip);
         zipEntry = new ZipEntry(fileName);
-        zipOut.putNextEntry(zipEntry);
+        out.putNextEntry(zipEntry);
 
-        FileUtil.write(fis, zipOut);
+        FileUtil.write(fis, out);
 
-        zipOut.closeEntry();
+        out.closeEntry();
         fis.close();
         fileCounter++;
         System.out.println("Finish Zip file " + fileName);
         if (isSizeExceeded()) {
-            removeEntry(zipPath, fileName);
+            removeEntry(archivePath, fileName);
             if(isFileLargerMaxLimit()) {
                 System.out.println("Compressed file " + fileName + " is larger then max limit.");
                 if(fileCounter != 0) {
@@ -89,6 +61,11 @@ public class ZipCompressor implements Compressor {
         }
     }
 
+    @Override
+    protected ZipOutputStream initOutputStream() throws IOException {
+        return new ZipOutputStream(new FileOutputStream(archivePath));
+    }
+
     /**
      * If file, even if compressed, is larger then maz limit, we must to split it to the parts.
      * And when decompress combine them to the single file.
@@ -100,57 +77,24 @@ public class ZipCompressor implements Compressor {
      * @throws IOException when file not found or error while read/write to file.
      */
     private void compressLargeFile(File fileToZip, String fileName, int parts, long partSize) throws IOException {
-        if(zipOut == null) {
+        if(out == null) {
             nextArchive(true);
         }
         FileInputStream fis = new FileInputStream(fileToZip);
         long partLimit = partSize;
         long counter = 0;
         for(int i = 0; i < parts; i++) {
-            zipEntry = new ZipEntry(fileName + "_part" + i);
-            zipOut.putNextEntry(zipEntry);
+            zipEntry = new ZipEntry(fileName + PART_DELIMETER + i);
+            out.putNextEntry(zipEntry);
             int cur;
             while ((counter <= partLimit) && (cur = fis.read()) >= 0) {
-                zipOut.write(cur);
+                out.write(cur);
                 counter++;
             }
             partLimit += partSize;
             if(i!= (parts -1)) nextArchive(true);
         }
         close();
-    }
-
-    /**
-     * Closes current archive, and open new one.
-     * Archive counter is added to archive name, so order is dirCompressed0, dirCompressed1, etc...
-     *
-     * @param resetFileCounter if true, resets file counter
-     * @throws IOException if file not found.
-     */
-    private void nextArchive(boolean resetFileCounter) throws IOException {
-        if (zipOut != null) {
-            zipOut.close();
-        }
-        zipPath = Settings.outputZipDir + File.separator + "dirCompressed" + archiveCounter + ".zip";
-        zipOut = new ZipOutputStream(new FileOutputStream(zipPath));
-        archiveCounter++;
-        if (resetFileCounter) {
-            fileCounter = 0;
-        } else {
-            fileCounter--;
-        }
-    }
-
-    /**
-     * Check archive size.
-     * @return true if archive size is exceeded, false otherwise.
-     */
-    private boolean isSizeExceeded() {
-        File zip = new File(zipPath);
-        long zipSize = zip.length();
-        boolean result =  zipSize > Settings.maxSize;
-        System.out.println(zipPath + " size =  " + zipSize + ", limit exceeded = " + result);
-        return result;
     }
 
     /**
@@ -170,7 +114,7 @@ public class ZipCompressor implements Compressor {
      * @throws IOException if file not found or error while read/write.
      */
     private void removeEntry(String zipPath, String entryName) throws IOException {
-        zipOut.close();
+        out.close();
         nextArchive(false);
         System.out.println("Remove entry " + entryName + " from zip " + zipPath);
         File zipFile = new File(zipPath);
@@ -181,8 +125,8 @@ public class ZipCompressor implements Compressor {
         while (entry != null) {
             String name = entry.getName();
             if (!entryName.equals(name)) {
-                zipOut.putNextEntry(new ZipEntry(name));
-                FileUtil.write(zin, zipOut);
+                out.putNextEntry(new ZipEntry(name));
+                FileUtil.write(zin, out);
             } else {
                 System.out.println("Skip entry " + name);
             }

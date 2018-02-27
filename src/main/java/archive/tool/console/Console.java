@@ -31,11 +31,11 @@ public class Console {
 
         System.out.println("\n Enter path to Input directory:");
         String inputDir = scanner.next();
-        Settings.inputZipDir = inputDir;
+        Settings.inputCompressDir = inputDir;
 
         System.out.println("\n Enter path to Output directory:");
         String outputDir = scanner.next();
-        Settings.outputZipDir = outputDir;
+        Settings.outputCompressDir = outputDir;
 
         System.out.println("\n Enter max output file size in bytes:");
         Long maxSize = scanner.nextLong();
@@ -47,10 +47,10 @@ public class Console {
 
         System.out.println("\n Enter path to Input directory:");
         String inputDir = scanner.next();
-        Settings.inputUnzipDir = inputDir;
+        Settings.inputUncompressDir = inputDir;
 
         System.out.println("\n Enter path to Output directory:");
         String outputDir = scanner.next();
-        Settings.outputUnzipDir = outputDir;
+        Settings.outputUncompressDir = outputDir;
     }
 }
