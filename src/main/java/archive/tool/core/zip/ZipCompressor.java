@@ -17,6 +17,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ZipCompressor implements Compressor {
 
+    private long cellSize = 4000;
     private ZipOutputStream zipOut;
     private String zipPath;
     private ZipEntry zipEntry;
@@ -74,7 +75,7 @@ public class ZipCompressor implements Compressor {
                     System.out.println("Current archive contains files, create new one");
                     nextArchive(true);
                 }
-                int parts = (int)(zipEntry.getCompressedSize()/Settings.maxSize + 1);
+                int parts = (int)(zipEntry.getCompressedSize()/(Settings.maxSize - cellSize) + 1);
                 System.out.println("Split file into " + parts + " parts");
                 long partSize = (long) Math.ceil((double)zipEntry.getSize() / parts);
                 System.out.println("Part size = " + partSize);
@@ -135,9 +136,9 @@ public class ZipCompressor implements Compressor {
         archiveCounter++;
         if (resetFileCounter) {
             fileCounter = 0;
-        } /*else {
+        } else {
             fileCounter--;
-        }*/
+        }
     }
 
     /**
