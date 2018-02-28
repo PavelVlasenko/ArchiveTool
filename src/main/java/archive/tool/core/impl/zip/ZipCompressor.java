@@ -51,7 +51,10 @@ public class ZipCompressor extends AbstractCompressor<ZipOutputStream> {
                 System.out.println("Split file into " + parts + " parts");
                 long partSize = (long) Math.ceil((double)zipEntry.getSize() / parts);
                 System.out.println("Part size = " + partSize);
-                compressLargeFile(fileToZip, fileName, parts, partSize);
+                LargeFileZipCompressor largeFileZipCompressor = new LargeFileZipCompressor(fileToZip, fileName, parts, partSize, out, zipEntry, archiveCounter -1);
+                largeFileZipCompressor.start();
+                largeFilesThreads.add(largeFileZipCompressor);
+                out = null;
             }
             else {
                 System.out.println("Max limit exceeded. Create new archive.");
@@ -66,36 +69,7 @@ public class ZipCompressor extends AbstractCompressor<ZipOutputStream> {
         return new ZipOutputStream(new FileOutputStream(archivePath));
     }
 
-    /**
-     * If file, even if compressed, is larger then maz limit, we must to split it to the parts.
-     * And when decompress combine them to the single file.
-     *
-     * @param fileToZip target file.
-     * @param fileName file name.
-     * @param parts number of parts for this file.
-     * @param partSize part size in bytes.
-     * @throws IOException when file not found or error while read/write to file.
-     */
-    private void compressLargeFile(File fileToZip, String fileName, int parts, long partSize) throws IOException {
-        if(out == null) {
-            nextArchive(true);
-        }
-        FileInputStream fis = new FileInputStream(fileToZip);
-        long partLimit = partSize;
-        long counter = 0;
-        for(int i = 0; i < parts; i++) {
-            zipEntry = new ZipEntry(fileName + PART_DELIMETER + i);
-            out.putNextEntry(zipEntry);
-            int cur;
-            while ((counter <= partLimit) && (cur = fis.read()) >= 0) {
-                out.write(cur);
-                counter++;
-            }
-            partLimit += partSize;
-            if(i!= (parts -1)) nextArchive(true);
-        }
-        close();
-    }
+
 
     /**
      * Compare compressed file size and max limit.

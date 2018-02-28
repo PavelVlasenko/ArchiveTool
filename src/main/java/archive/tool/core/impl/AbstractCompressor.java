@@ -6,6 +6,8 @@ import archive.tool.core.Compressor;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Compress files
@@ -17,13 +19,15 @@ public abstract class AbstractCompressor<T extends OutputStream> implements Comp
     protected T out;
     protected String archivePath;
     protected int fileCounter = 0;
-    private int archiveCounter = 0;
+    protected int archiveCounter = 0;
+    protected List<Thread> largeFilesThreads = new ArrayList<>();
 
     @Override
-    public void compress()  throws IOException {
+    public void compress()  throws IOException{
         nextArchive(true);
         File fileToZip = new File(Settings.inputCompressDir);
         compressFile(fileToZip, fileToZip.getName());
+        waitLargeFiles();
         close();
     }
 
@@ -63,6 +67,17 @@ public abstract class AbstractCompressor<T extends OutputStream> implements Comp
             out.close();
             out = null;
         }
+    }
+
+    private void waitLargeFiles() {
+        System.out.println("Wait " + largeFilesThreads.size() + " threads");
+        largeFilesThreads.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
